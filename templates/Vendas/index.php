@@ -8,6 +8,7 @@
     <?= $this->Html->link(__('New Venda'), ['action' => 'add'], ['class' => 'button float-right']) ?>
     <h3><?= __('Vendas') ?></h3>
     <div class="table-responsive">
+    <?= $this->Html->link(__('Sales Report'), ['action' => 'report'], ['class' => 'button button-gray']) ?>
         <table>
             <thead>
                 <tr>

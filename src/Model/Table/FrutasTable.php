@@ -70,15 +70,20 @@ class FrutasTable extends Table
             ->scalar('classificacao')
             ->maxLength('classificacao', 255)
             ->requirePresence('classificacao', 'create')
-            ->notEmptyString('classificacao');
+            ->notEmptyString('classificacao')
+        ->add('classificacao','inList',
+            ['rule' => ['inList',
+                ['Extra', 'Primeira', 'Segunda', 'Terceira']
+            ], 'message' => 'Please enter a valid classification']
+        );
 
         $validator
-            ->boolean('fresca')
+            ->boolean('fresca','Please specify if the fruit is fresh')
             ->requirePresence('fresca', 'create')
             ->notEmptyString('fresca');
 
         $validator
-            ->integer('quantidade')
+            ->integer('quantidade','Please enter the available quantity')
             ->requirePresence('quantidade', 'create')
             ->notEmptyString('quantidade');
 

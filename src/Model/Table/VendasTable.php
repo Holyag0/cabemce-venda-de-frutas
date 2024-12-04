@@ -80,12 +80,12 @@ class VendasTable extends Table
             ->notEmptyString('quantidade');
 
         $validator
-            ->decimal('desconto')
+            ->numeric('desconto')
             ->requirePresence('desconto', 'create')
             ->notEmptyString('desconto');
 
         $validator
-            ->decimal('valor_total')
+            ->numeric('valor_total')
             ->requirePresence('valor_total', 'create')
             ->notEmptyString('valor_total');
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Venda $venda
@@ -19,20 +20,18 @@
         </div>
     </aside>
     <div class="column column-80">
-        <div class="vendas form content">
-            <?= $this->Form->create($venda) ?>
-            <fieldset>
-                <legend><?= __('Edit Venda') ?></legend>
-                <?php
-                    echo $this->Form->control('user_id', ['options' => $users]);
-                    echo $this->Form->control('fruta_id', ['options' => $frutas]);
-                    echo $this->Form->control('quantidade');
-                    echo $this->Form->control('desconto');
-                    echo $this->Form->control('valor_total');
-                ?>
-            </fieldset>
-            <?= $this->Form->button(__('Submit')) ?>
-            <?= $this->Form->end() ?>
-        </div>
+        <div class="vendas form content"> <?= $this->Form->create($venda) ?> <fieldset>
+                <legend><?= __('Edit Sale') ?></legend> 
+                <?php echo $this->Form->control('user_id', ['options' => $users]);
+                            echo $this->Form->control('fruta_id', ['options' => $frutas]);
+                            echo $this->Form->control('quantidade');
+                            echo $this->Form->control('valor');
+                            echo $this->Form->control('desconto', ['type' => 'select',
+                             'options' => [5 => '5%', 10 => '10%', 15 => '15%', 20 => '20%', 25 => '25%'],
+                             'empty' => 'Choose a discount']); 
+                             ?>
+            </fieldset> 
+            <?= $this->Form->button(__('Save')) ?> <?= $this->Form->end() ?>
+         </div>
     </div>
 </div>

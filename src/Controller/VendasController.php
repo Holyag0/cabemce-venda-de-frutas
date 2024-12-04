@@ -46,17 +46,35 @@ class VendasController extends AppController
     {
         $venda = $this->Vendas->newEmptyEntity();
         if ($this->request->is('post')) {
-            $venda = $this->Vendas->patchEntity($venda, $this->request->getData());
-            if ($this->Vendas->save($venda)) {
-                $this->Flash->success(__('The venda has been saved.'));
-
-                return $this->redirect(['action' => 'index']);
+            $data = $this->request->getData();
+            $descontoPermitido = [5, 10, 15, 20, 25];
+            $desconto = isset($data['desconto']) ? $data['desconto'] : 0;
+            if (!in_array($desconto, $descontoPermitido)) {
+                $this->Flash->error(__('Invalid discount value.'));
+                return $this->redirect(['action' => 'add']);
+            } 
+            $data['valor'] = str_replace(',', '.', $data['valor']);
+            $data['quantidade'] = str_replace(',', '.', $data['quantidade']);
+            $valorOriginal = $data['valor'] * $data['quantidade']; 
+            $valorDesconto = $valorOriginal * ($desconto / 100);
+            $valorTotal = $valorOriginal - $valorDesconto;
+            if ($valorTotal < 0) {
+                $this->Flash->error(__('The discount applied is too high and makes the total value negative.'));
+            } else {
+                $data['valor_total'] = round($valorTotal, 2); 
+                $data['desconto'] = $desconto;
+                $venda = $this->Vendas->patchEntity($venda, $data);
+                if ($this->Vendas->save($venda)) {
+                    $this->Flash->success(__('The sale has been saved.'));
+                    return $this->redirect(['action' => 'index']);
+                }
+                $this->Flash->error(__('The sale could not be saved. Please, try again.'));
             }
-            $this->Flash->error(__('The venda could not be saved. Please, try again.'));
         }
-        $users = $this->Vendas->Users->find('list', limit: 200)->all();
-        $frutas = $this->Vendas->Frutas->find('list', limit: 200)->all();
-        $this->set(compact('venda', 'users', 'frutas'));
+        $users = $this->Vendas->Users->find('list', ['limit' => 200]);
+        $frutas = $this->Vendas->Frutas->find('list', ['limit' => 200]);
+        $descontos = [5 => '5%', 10 => '10%', 15 => '15%', 20 => '20%', 25 => '25%'];
+        $this->set(compact('venda', 'users', 'frutas', 'descontos'));
     }
 
     /**
@@ -68,19 +86,40 @@ class VendasController extends AppController
      */
     public function edit($id = null)
     {
-        $venda = $this->Vendas->get($id, contain: []);
+        $venda = $this->Vendas->get($id);
         if ($this->request->is(['patch', 'post', 'put'])) {
-            $venda = $this->Vendas->patchEntity($venda, $this->request->getData());
-            if ($this->Vendas->save($venda)) {
-                $this->Flash->success(__('The venda has been saved.'));
+            $data = $this->request->getData();
+            $descontoPermitido = [5, 10, 15, 20, 25];
+            $desconto = isset($data['desconto']) ? $data['desconto'] : 0;
+            
+            if (!in_array($desconto, $descontoPermitido)) {
+                $this->Flash->error(__('Invalid discount value.'));
+                return $this->redirect(['action' => 'edit', $id]);
+            } 
 
-                return $this->redirect(['action' => 'index']);
+            $data['valor'] = str_replace(',', '.', $data['valor']);
+            $data['quantidade'] = str_replace(',', '.', $data['quantidade']);
+            $valorOriginal = $data['valor'] * $data['quantidade']; 
+            $valorDesconto = $valorOriginal * ($desconto / 100);
+            $valorTotal = $valorOriginal - $valorDesconto; 
+
+            if ($valorTotal < 0) {
+                $this->Flash->error(__('The discount applied is too high and makes the total value negative.'));
+            } else {
+                $data['valor_total'] = round($valorTotal, 2); 
+                $data['desconto'] = $desconto;
+                $venda = $this->Vendas->patchEntity($venda, $data);
+                if ($this->Vendas->save($venda)) {
+                    $this->Flash->success(__('The sale has been updated.'));
+                    return $this->redirect(['action' => 'index']);
+                }
+                $this->Flash->error(__('The sale could not be updated. Please, try again.'));
             }
-            $this->Flash->error(__('The venda could not be saved. Please, try again.'));
         }
-        $users = $this->Vendas->Users->find('list', limit: 200)->all();
-        $frutas = $this->Vendas->Frutas->find('list', limit: 200)->all();
-        $this->set(compact('venda', 'users', 'frutas'));
+        $users = $this->Vendas->Users->find('list', ['limit' => 200]);
+        $frutas = $this->Vendas->Frutas->find('list', ['limit' => 200]);
+        $descontos = [5 => '5%', 10 => '10%', 15 => '15%', 20 => '20%', 25 => '25%'];
+        $this->set(compact('venda', 'users', 'frutas', 'descontos'));
     }
 
     /**
@@ -102,4 +141,41 @@ class VendasController extends AppController
 
         return $this->redirect(['action' => 'index']);
     }
+
+    public function report(){
+       
+        // $this->loadComponent('Authentication.Authentication');
+        // $identity = $this->Authentication->getIdentity();
+        // if ($identity->role !== 'vendedor') {
+        //     $this->Flash->error(__('You are not authorized to access this report.'));
+        //     return $this->redirect(['action' => 'index']);
+        // }
+
+        $vendas = $this->Vendas->find('all', [
+            'contain' => ['Users', 'Frutas'],
+            'order' => ['Vendas.created' => 'DESC']
+        ]);
+
+        $this->set(compact('vendas'));
+    }
+
+    public function sell($id = null)
+    {
+        $venda = $this->Vendas->newEmptyEntity();
+        if ($this->request->is('post')) {
+            $data = $this->request->getData();
+            $desconto = isset($data['desconto']) ? $data['desconto'] : 0;
+            $valorTotal = $data['valor'] - ($data['valor'] * ($desconto / 100));
+            $data['valor_total'] = $valorTotal;
+            $venda = $this->Vendas->patchEntity($venda, $data);
+            if ($this->Vendas->save($venda)) {
+                $this->Flash->success(__('The fruit has been sold.'));
+                return $this->redirect(['action' => 'index']);
+            }
+            $this->Flash->error(__('The fruit could not be sold. Please, try again.'));
+        }
+        $frutas = $this->Vendas->Frutas->find('list', ['limit' => 200]);
+        $this->set(compact('venda', 'frutas'));
+    }
+   
 }

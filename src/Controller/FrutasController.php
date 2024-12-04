@@ -18,6 +18,9 @@ class FrutasController extends AppController
     public function index()
     {
         $query = $this->Frutas->find();
+        if ($this->request->getQuery('q') || $this->request->getQuery('classificacao') || $this->request->getQuery('fresca') !== null) {
+            return $this->redirect(['action' => 'search', '?' => $this->request->getQueryParams()]);
+        }
         $frutas = $this->paginate($query);
 
         $this->set(compact('frutas'));
@@ -97,4 +100,35 @@ class FrutasController extends AppController
 
         return $this->redirect(['action' => 'index']);
     }
+    public function search()
+    {
+        $query = $this->Frutas->find();
+        if ($this->request->getQuery('q')) {
+            $query->where(['Frutas.nome ILIKE' => '%' . $this->request->getQuery('q') . '%']);
+        }
+        if ($this->request->getQuery('classificacao')) {
+            $query->where(['Frutas.classificacao' => $this->request->getQuery('classificacao')]);
+        }
+        if ($this->request->getQuery('fresca') !== null) {
+            $query->where(['Frutas.fresca' => (bool)$this->request->getQuery('fresca')]);
+        }
+        $frutas = $this->paginate($query);
+        $this->set(compact('frutas'));
+
+        $this->render('index');
+    }
+    // public function filter()
+    // {
+    //     $classificacao = $this->request->getQuery('classificacao');
+    //     $fresca = $this->request->getQuery('fresca');
+    //     $conditions = [];
+    //     if ($classificacao) {
+    //         $conditions['Frutas.classificacao'] = $classificacao;
+    //     }
+    //     if ($fresca !== null) {
+    //         $conditions['Frutas.fresca'] = $fresca;
+    //     }
+    //     $frutas = $this->Frutas->find('all', ['conditions' => $conditions]);
+    //     $this->set(compact('frutas'));
+    // }
 }

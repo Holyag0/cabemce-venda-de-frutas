@@ -40,4 +40,12 @@ class Fruta extends Entity
         'modified' => true,
         'vendas' => true,
     ];
+    protected function _setValor($valor)
+    {
+        return round($valor, 2); 
+    }
+    protected function _setValorTotal($valorTotal)
+    {
+        return round($valorTotal, 2); 
+    }
 }
